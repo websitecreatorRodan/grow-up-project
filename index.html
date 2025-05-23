@@ -100,7 +100,7 @@
             </div>
         </div>
 
-        <div id="students-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div id="students-container" class="grid grid-cols-1 gap-8">
             </div>
     </div>
 
@@ -134,15 +134,15 @@
 
         // Arrays for distinct and varied styling, now aligned with the image's color scheme
         const sectionBackgrounds = [
-            'bg-white', 'bg-yellow-50', 'bg-white', 'bg-yellow-50', 'bg-white',
-            'bg-yellow-50', 'bg-white', 'bg-yellow-50', 'bg-white', 'bg-yellow-50',
-            'bg-white', 'bg-yellow-50', 'bg-white', 'bg-yellow-50', 'bg-white'
+            'bg-gray-900', 'bg-blue-900', 'bg-indigo-900', 'bg-purple-900', 'bg-red-900',
+            'bg-green-900', 'bg-teal-900', 'bg-cyan-900', 'bg-fuchsia-900', 'bg-rose-900',
+            'bg-emerald-900', 'bg-orange-900', 'bg-lime-900', 'bg-sky-900', 'bg-violet-900'
         ];
 
         const sectionBorderColors = [
-            'border-blue-500', 'border-yellow-500', 'border-blue-500', 'border-yellow-500', 'border-blue-500',
-            'border-yellow-500', 'border-blue-500', 'border-yellow-500', 'border-blue-500', 'border-yellow-500',
-            'border-blue-500', 'border-yellow-500', 'border-blue-500', 'border-yellow-500', 'border-blue-500'
+            'border-yellow-400', 'border-cyan-400', 'border-lime-400', 'border-pink-400', 'border-teal-400',
+            'border-orange-400', 'border-emerald-400', 'border-fuchsia-400', 'border-rose-400', 'border-blue-400',
+            'border-green-400', 'border-purple-400', 'border-indigo-400', 'border-red-400', 'border-amber-400'
         ];
 
         const sectionBorderWidths = [
@@ -158,9 +158,9 @@
         ];
 
         const secondaryButtonBgColors = [
-            'bg-yellow-400', 'bg-blue-300', 'bg-yellow-400', 'bg-blue-300', 'bg-yellow-400',
-            'bg-blue-300', 'bg-yellow-400', 'bg-blue-300', 'bg-yellow-400', 'bg-blue-300',
-            'bg-yellow-400', 'bg-blue-300', 'bg-yellow-400', 'bg-blue-300', 'bg-yellow-400'
+            'bg-yellow-300', 'bg-cyan-300', 'bg-lime-300', 'bg-pink-300', 'bg-teal-300',
+            'bg-orange-300', 'bg-emerald-300', 'bg-fuchsia-300', 'bg-rose-300', 'bg-blue-300',
+            'bg-green-300', 'bg-purple-300', 'bg-indigo-300', 'bg-red-300', 'bg-amber-300'
         ];
 
         const secondaryButtonTextColors = [
@@ -171,9 +171,9 @@
 
 
         const headingTextColors = [
-            'text-blue-900', 'text-gray-800', 'text-blue-900', 'text-gray-800', 'text-blue-900',
-            'text-gray-800', 'text-blue-900', 'text-gray-800', 'text-blue-900', 'text-gray-800',
-            'text-blue-900', 'text-gray-800', 'text-blue-900', 'text-gray-800', 'text-blue-900'
+            'text-yellow-300', 'text-cyan-300', 'text-lime-300', 'text-pink-300', 'text-teal-300',
+            'text-orange-300', 'text-emerald-300', 'text-fuchsia-300', 'text-rose-300', 'text-blue-300',
+            'text-green-300', 'text-purple-300', 'text-indigo-300', 'text-red-300', 'text-amber-300'
         ];
 
         const fontFamilies = [
@@ -228,12 +228,12 @@
             container.innerHTML = `
                 <h2 class="text-2xl font-bold ${headingColor} mb-4 ${alignment}">${studentName}</h2>
                 <div class="mb-6">
-                    <label for="prompt-${index}" class="block text-gray-700 text-lg font-semibold mb-2 ${labelAlignment}">
+                    <label for="prompt-${index}" class="block text-gray-200 text-lg font-semibold mb-2 ${labelAlignment}">
                         What do you dream of?
                     </label>
                     <textarea
                         id="prompt-${index}"
-                        class="w-full ${sectionPadding} border border-gray-300 ${sectionBorderRadius} focus:ring-4 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out resize-none h-32 text-gray-800 ${fontFamily}"
+                        class="w-full ${sectionPadding} border border-gray-600 ${sectionBorderRadius} focus:ring-4 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out resize-none h-32 bg-gray-800 text-white ${fontFamily}"
                         placeholder="e.g., A magical forest with glowing trees and talking animals."
                         data-index="${index}"
                     >${student.prompt}</textarea>
@@ -314,22 +314,22 @@
                 </div>
 
                 ${student.suggestedStyles ? `
-                    <div class="mt-4 p-3 bg-white border border-gray-200 rounded-xl text-gray-700 text-sm shadow-inner ${fontFamily}">
-                        <strong class="block mb-1 text-gray-800">Suggested Styles:</strong>
+                    <div class="mt-4 p-3 bg-gray-800 border border-gray-700 rounded-xl text-gray-200 text-sm shadow-inner ${fontFamily}">
+                        <strong class="block mb-1 text-gray-100">Suggested Styles:</strong>
                         ${student.suggestedStyles}
                     </div>
                 ` : ''}
 
                 ${student.analysisResult ? `
-                    <div class="mt-4 p-3 bg-white border border-gray-200 rounded-xl text-gray-700 text-sm shadow-inner ${fontFamily}">
-                        <strong class="block mb-1 text-gray-800">Prompt Analysis:</strong>
+                    <div class="mt-4 p-3 bg-gray-800 border border-gray-700 rounded-xl text-gray-200 text-sm shadow-inner ${fontFamily}">
+                        <strong class="block mb-1 text-gray-100">Prompt Analysis:</strong>
                         ${student.analysisResult}
                     </div>
                 ` : ''}
 
                 ${student.moodAnalysis ? `
-                    <div class="mt-4 p-3 bg-white border border-gray-200 rounded-xl text-gray-700 text-sm shadow-inner ${fontFamily}">
-                        <strong class="block mb-1 text-gray-800">Mood Analysis:</strong>
+                    <div class="mt-4 p-3 bg-gray-800 border border-gray-700 rounded-xl text-gray-200 text-sm shadow-inner ${fontFamily}">
+                        <strong class="block mb-1 text-gray-100">Mood Analysis:</strong>
                         ${student.moodAnalysis}
                     </div>
                 ` : ''}
@@ -356,12 +356,12 @@
 
                 ${student.imageUrl ? `
                     <div class="mt-8 text-center">
-                        <h3 class="text-xl font-bold text-gray-800 mb-4 ${fontFamily}">Your Dream Image:</h3>
-                        <div class="bg-gray-100 p-2 rounded-xl shadow-inner border border-gray-200 overflow-hidden">
+                        <h3 class="text-xl font-bold text-gray-200 mb-4 ${fontFamily}">Your Dream Image:</h3>
+                        <div class="bg-gray-800 p-2 rounded-xl shadow-inner border border-gray-700 overflow-hidden">
                             <img
                                 src="${student.imageUrl}"
                                 alt="Generated by Dream Weaver"
-                                class="max-w-full h-auto object-contain rounded-lg border border-gray-200"
+                                class="max-w-full h-auto object-contain rounded-lg border border-gray-700"
                                 onerror="this.onerror=null; this.src='https://placehold.co/400x300/E0E0E0/333333?text=Image+Load+Error';"
                             />
                         </div>
@@ -401,14 +401,14 @@
                             Download Image
                         </a>
                         ${student.imageCaption ? `
-                            <div class="mt-4 p-3 bg-white border border-gray-200 rounded-xl text-gray-700 text-sm shadow-inner ${fontFamily}">
-                                <strong class="block mb-1 text-gray-800">Image Caption:</strong>
+                            <div class="mt-4 p-3 bg-gray-800 border border-gray-700 rounded-xl text-gray-200 text-sm shadow-inner ${fontFamily}">
+                                <strong class="block mb-1 text-gray-100">Image Caption:</strong>
                                 ${student.imageCaption}
                             </div>
                         ` : ''}
                         ${student.storyStarter ? `
-                            <div class="mt-4 p-3 bg-white border border-gray-200 rounded-xl text-gray-700 text-sm shadow-inner ${fontFamily}">
-                                <strong class="block mb-1 text-gray-800">Story Starter:</strong>
+                            <div class="mt-4 p-3 bg-gray-800 border border-gray-700 rounded-xl text-gray-200 text-sm shadow-inner ${fontFamily}">
+                                <strong class="block mb-1 text-gray-100">Story Starter:</strong>
                                 ${student.storyStarter}
                             </div>
                         ` : ''}
