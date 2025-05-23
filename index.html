@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grow Up - Dream Weaver</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for animations and specific elements */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Roboto+Mono:wght@400;700&family=Merriweather:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Using colors inspired by the image: Dark blue/purple gradient */
+            background: linear-gradient(135deg, #1A2B5B 0%, #4A0E6E 100%); /* Custom dark blue to dark purple */
+            background-size: 400% 400%;
+            animation: gradientAnimation 15s ease infinite;
+        }
+
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Spinner for secondary buttons (now with colors matching the scheme) */
+        .spinner-secondary {
+            border: 4px solid rgba(0, 0, 0, 0.3); /* Darker color for contrast */
+            border-top: 4px solid #1F2937; /* Very dark gray/black */
+        }
+
+        /* Custom button shadow and hover effects */
+        .btn-fancy {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+        .btn-fancy:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2), 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-fancy:active {
+            transform: translateY(0) scale(0.98);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Specific styles for the main generate button, using the logo's dark blue/purple */
+        .btn-generate {
+            background-image: linear-gradient(to right, var(--tw-gradient-stops));
+            --tw-gradient-from: #1A2B5B; /* Dark blue from logo */
+            --tw-gradient-to: #4A0E6E;   /* Dark purple from logo */
+            --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+        }
+        .btn-generate:hover {
+            --tw-gradient-from: #0F1A3A; /* Slightly darker blue */
+            --tw-gradient-to: #3A0B5A;   /* Slightly darker purple */
+        }
+
+        /* Input focus style, matching the blue accent */
+        textarea:focus {
+            outline: none;
+            border-color: #3B82F6; /* Tailwind blue-500, a good accent blue */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); /* blue-500 with opacity */
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4">
+    <div class="container mx-auto py-8">
+        <div class="bg-yellow-400 p-4 rounded-xl shadow-2xl mb-8 max-w-lg mx-auto">
+            <h1 class="text-5xl font-extrabold text-center text-blue-900 drop-shadow-lg">
+                GROW UP
+            </h1>
+        </div>
+
+        <div class="mb-12 flex justify-center">
+            <div class="bg-white p-4 rounded-xl shadow-lg flex items-center w-full max-w-md">
+                <input
+                    type="text"
+                    id="search-input"
+                    class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out text-gray-800"
+                    placeholder="Search for a student or a dream..."
+                >
+                <button
+                    id="search-button"
+                    class="ml-3 bg-blue-600 text-white py-3 px-6 rounded-lg text-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 transition duration-200 ease-in-out btn-fancy"
+                >
+                    Search
+                </button>
+            </div>
+        </div>
+
+        <div id="students-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            </div>
+    </div>
+
+    <script>
+        // Array to hold the state for each student's section
+        const studentStates = Array(15).fill(null).map(() => ({
+            prompt: '',
+            imageUrl: '',
+            isLoading: false, // for image generation
+            isEnhancing: false, // for prompt enhancement
+            isSuggesting: false, // for idea suggestion
+            isSuggestingStyle: false, // for style suggestion
+            isAnalyzing: false, // for prompt analysis
+            isGeneratingCaption: false, // for caption generation
+            isGeneratingStory: false, // for story generation
+            isAnalyzingMood: false, // for mood analysis
+            suggestedStyles: '', // to store suggested styles
+            analysisResult: '', // to store prompt analysis result
+            imageCaption: '', // to store generated image caption
+            storyStarter: '', // to store generated story starter
+            moodAnalysis: '', // to store mood analysis result
+            error: ''
+        }));
+
+        // Provided student names
+        const studentNames = [
+            "nischal", "akhil", "shanmukha sai", "rohan", "shiva dattu",
+            "mahesh", "dattu", "imran", "sujan", "umesh",
+            "luqman", "vignesh", "kethan"
+        ];
+
+        // Arrays for distinct and varied styling, now aligned with the image's color scheme
+        const sectionBackgrounds = [
+            'bg-white', 'bg-yellow-50', 'bg-white', 'bg-yellow-50', 'bg-white',
+            'bg-yellow-50', 'bg-white', 'bg-yellow-50', 'bg-white', 'bg-yellow-50',
+            'bg-white', 'bg-yellow-50', 'bg-white', 'bg-yellow-50', 'bg-white'
+        ];
+
+        const sectionBorderColors = [
+            'border-blue-500', 'border-yellow-500', 'border-blue-500', 'border-yellow-500', 'border-blue-500',
+            'border-yellow-500', 'border-blue-500', 'border-yellow-500', 'border-blue-500', 'border-yellow-500',
+            'border-blue-500', 'border-yellow-500', 'border-blue-500', 'border-yellow-500', 'border-blue-500'
+        ];
+
+        const sectionBorderWidths = [
+            'border-2', 'border-4', 'border-2', 'border-4', 'border-2',
+            'border-4', 'border-2', 'border-4', 'border-2', 'border-4',
+            'border-2', 'border-4', 'border-2', 'border-4', 'border-2'
+        ];
+
+        const sectionShadows = [
+            'shadow-lg', 'shadow-xl', 'shadow-2xl', 'shadow-md', 'shadow-lg',
+            'shadow-xl', 'shadow-2xl', 'shadow-md', 'shadow-lg', 'shadow-xl',
+            'shadow-2xl', 'shadow-md', 'shadow-lg', 'shadow-xl', 'shadow-2xl'
+        ];
+
+        const secondaryButtonBgColors = [
+            'bg-yellow-400', 'bg-blue-300', 'bg-yellow-400', 'bg-blue-300', 'bg-yellow-400',
+            'bg-blue-300', 'bg-yellow-400', 'bg-blue-300', 'bg-yellow-400', 'bg-blue-300',
+            'bg-yellow-400', 'bg-blue-300', 'bg-yellow-400', 'bg-blue-300', 'bg-yellow-400'
+        ];
+
+        const secondaryButtonTextColors = [
+            'text-gray-900', 'text-gray-900', 'text-gray-900', 'text-gray-900', 'text-gray-900',
+            'text-gray-900', 'text-gray-900', 'text-gray-900', 'text-gray-900', 'text-gray-900',
+            'text-gray-900', 'text-gray-900', 'text-gray-900', 'text-gray-900', 'text-gray-900'
+        ];
+
+
+        const headingTextColors = [
+            'text-blue-900', 'text-gray-800', 'text-blue-900', 'text-gray-800', 'text-blue-900',
+            'text-gray-800', 'text-blue-900', 'text-gray-800', 'text-blue-900', 'text-gray-800',
+            'text-blue-900', 'text-gray-800', 'text-blue-900', 'text-gray-800', 'text-blue-900'
+        ];
+
+        const fontFamilies = [
+            'font-sans', // Inter
+            'font-serif', // Merriweather
+            'font-mono' // Roboto Mono
+        ];
+
+        const textAlignments = [
+            'text-center',
+            'text-left'
+        ];
+
+        const paddingClasses = [
+            'p-8', 'p-6', 'p-10', 'p-7', 'p-9' // Varying padding
+        ];
+
+        const borderRadiusClasses = [
+            'rounded-2xl', 'rounded-lg', 'rounded-3xl', 'rounded-xl', 'rounded-full' // Varying border-radius
+        ];
+
+        // Function to render/update a single student's section
+        function renderStudentSection(index) {
+            const student = studentStates[index];
+            const container = document.getElementById(`student-section-${index}`);
+
+            if (!container) {
+                console.error(`Container for student ${index} not found.`);
+                return;
+            }
+
+            // Get student name, cycling through if more sections than names
+            const studentName = studentNames[index % studentNames.length];
+
+            // Apply varied styles based on index
+            const sectionBg = sectionBackgrounds[index % sectionBackgrounds.length];
+            const sectionBorder = sectionBorderColors[index % sectionBorderColors.length];
+            const sectionBorderWidth = sectionBorderWidths[index % sectionBorderWidths.length];
+            const sectionShadow = sectionShadows[index % sectionShadows.length];
+            const secondaryBtnBg = secondaryButtonBgColors[index % secondaryButtonBgColors.length];
+            const secondaryBtnText = secondaryButtonTextColors[index % secondaryButtonTextColors.length];
+            const headingColor = headingTextColors[index % headingTextColors.length];
+            const fontFamily = fontFamilies[index % fontFamilies.length];
+            const alignment = textAlignments[index % textAlignments.length]; // Alternate alignment
+            const sectionPadding = paddingClasses[index % paddingClasses.length];
+            const sectionBorderRadius = borderRadiusClasses[index % borderRadiusClasses.length];
+
+            // Intentional "mistakes" for some sections
+            const buttonWidthClass = (index % 3 === 0) ? 'flex-none w-3/4 mx-auto' : 'flex-1'; // Some buttons not full width
+            const labelAlignment = (index % 2 === 0) ? 'text-left' : 'text-center'; // Alternate label alignment
+
+            container.innerHTML = `
+                <h2 class="text-2xl font-bold ${headingColor} mb-4 ${alignment}">${studentName}</h2>
+                <div class="mb-6">
+                    <label for="prompt-${index}" class="block text-gray-700 text-lg font-semibold mb-2 ${labelAlignment}">
+                        What do you dream of?
+                    </label>
+                    <textarea
+                        id="prompt-${index}"
+                        class="w-full ${sectionPadding} border border-gray-300 ${sectionBorderRadius} focus:ring-4 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out resize-none h-32 text-gray-800 ${fontFamily}"
+                        placeholder="e.g., A magical forest with glowing trees and talking animals."
+                        data-index="${index}"
+                    >${student.prompt}</textarea>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                    <button
+                        id="enhance-prompt-btn-${index}"
+                        class="flex-1 ${secondaryBtnBg} ${secondaryBtnText} py-2 px-4 rounded-xl text-lg font-semibold btn-fancy ${student.isEnhancing ? 'opacity-60 cursor-not-allowed' : ''}"
+                        data-index="${index}"
+                        ${student.isEnhancing ? 'disabled' : ''}
+                    >
+                        ${student.isEnhancing ? `
+                            <div class="flex items-center justify-center">
+                                <div class="spinner spinner-secondary -ml-1 mr-2"></div>
+                                Enhancing...
+                            </div>
+                        ` : '✨ Enhance Prompt'}
+                    </button>
+                    <button
+                        id="suggest-idea-btn-${index}"
+                        class="flex-1 ${secondaryBtnBg} ${secondaryBtnText} py-2 px-4 rounded-xl text-lg font-semibold btn-fancy ${student.isSuggesting ? 'opacity-60 cursor-not-allowed' : ''}"
+                        data-index="${index}"
+                        ${student.isSuggesting ? 'disabled' : ''}
+                    >
+                        ${student.isSuggesting ? `
+                            <div class="flex items-center justify-center">
+                                <div class="spinner spinner-secondary -ml-1 mr-2"></div>
+                                Suggesting...
+                            </div>
+                        ` : '✨ Suggest Idea'}
+                    </button>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                    <button
+                        id="suggest-style-btn-${index}"
+                        class="flex-1 ${secondaryBtnBg} ${secondaryBtnText} py-2 px-4 rounded-xl text-lg font-semibold btn-fancy ${student.isSuggestingStyle ? 'opacity-60 cursor-not-allowed' : ''}"
+                        data-index="${index}"
+                        ${student.isSuggestingStyle ? 'disabled' : ''}
+                    >
+                        ${student.isSuggestingStyle ? `
+                            <div class="flex items-center justify-center">
+                                <div class="spinner spinner-secondary -ml-1 mr-2"></div>
+                                Styling...
+                            </div>
+                        ` : '✨ Suggest Style'}
+                    </button>
+                    <button
+                        id="analyze-prompt-btn-${index}"
+                        class="flex-1 ${secondaryBtnBg} ${secondaryBtnText} py-2 px-4 rounded-xl text-lg font-semibold btn-fancy ${student.isAnalyzing ? 'opacity-60 cursor-not-allowed' : ''}"
+                        data-index="${index}"
+                        ${student.isAnalyzing ? 'disabled' : ''}
+                    >
+                        ${student.isAnalyzing ? `
+                            <div class="flex items-center justify-center">
+                                <div class="spinner spinner-secondary -ml-1 mr-2"></div>
+                                Analyzing...
+                            </div>
+                        ` : '✨ Analyze Prompt'}
+                    </button>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                    <button
+                        id="analyze-mood-btn-${index}"
+                        class="flex-1 ${secondaryBtnBg} ${secondaryBtnText} py-2 px-4 rounded-xl text-lg font-semibold btn-fancy ${student.isAnalyzingMood ? 'opacity-60 cursor-not-allowed' : ''}"
+                        data-index="${index}"
+                        ${student.isAnalyzingMood ? 'disabled' : ''}
+                    >
+                        ${student.isAnalyzingMood ? `
+                            <div class="flex items-center justify-center">
+                                <div class="spinner spinner-secondary -ml-1 mr-2"></div>
+                                Analyzing Mood...
+                            </div>
+                        ` : '✨ Analyze Mood'}
+                    </button>
+                </div>
+
+                ${student.suggestedStyles ? `
+                    <div class="mt-4 p-3 bg-white border border-gray-200 rounded-xl text-gray-700 text-sm shadow-inner ${fontFamily}">
+                        <strong class="block mb-1 text-gray-800">Suggested Styles:</strong>
+                        ${student.suggestedStyles}
+                    </div>
+                ` : ''}
+
+                ${student.analysisResult ? `
+                    <div class="mt-4 p-3 bg-white border border-gray-200 rounded-xl text-gray-700 text-sm shadow-inner ${fontFamily}">
+                        <strong class="block mb-1 text-gray-800">Prompt Analysis:</strong>
+                        ${student.analysisResult}
+                    </div>
+                ` : ''}
+
+                ${student.moodAnalysis ? `
+                    <div class="mt-4 p-3 bg-white border border-gray-200 rounded-xl text-gray-700 text-sm shadow-inner ${fontFamily}">
+                        <strong class="block mb-1 text-gray-800">Mood Analysis:</strong>
+                        ${student.moodAnalysis}
+                    </div>
+                ` : ''}
+
+                <button
+                    id="generate-btn-${index}"
+                    class="w-full text-white py-3 px-6 rounded-xl text-xl font-bold btn-fancy btn-generate ${student.isLoading ? 'opacity-60 cursor-not-allowed' : ''}"
+                    data-index="${index}"
+                    ${student.isLoading ? 'disabled' : ''}
+                >
+                    ${student.isLoading ? `
+                        <div class="flex items-center justify-center">
+                            <div class="spinner -ml-1 mr-3"></div>
+                            Weaving dream...
+                        </div>
+                    ` : 'Generate Image'}
+                </button>
+
+                ${student.error ? `
+                    <div class="mt-6 p-4 bg-red-100 border border-red-400 rounded-xl text-red-700 text-center shadow-md">
+                        ${student.error}
+                    </div>
+                ` : ''}
+
+                ${student.imageUrl ? `
+                    <div class="mt-8 text-center">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 ${fontFamily}">Your Dream Image:</h3>
+                        <div class="bg-gray-100 p-2 rounded-xl shadow-inner border border-gray-200 overflow-hidden">
+                            <img
+                                src="${student.imageUrl}"
+                                alt="Generated by Dream Weaver"
+                                class="max-w-full h-auto object-contain rounded-lg border border-gray-200"
+                                onerror="this.onerror=null; this.src='https://placehold.co/400x300/E0E0E0/333333?text=Image+Load+Error';"
+                            />
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-2 mt-4 justify-center">
+                            <button
+                                id="generate-caption-btn-${index}"
+                                class="flex-1 bg-purple-600 text-white py-2 px-5 rounded-xl text-lg font-semibold btn-fancy hover:bg-purple-700 focus:outline-none focus:ring-4 focus:ring-purple-300 ${student.isGeneratingCaption ? 'opacity-60 cursor-not-allowed' : ''}"
+                                data-index="${index}"
+                                ${student.isGeneratingCaption ? 'disabled' : ''}
+                            >
+                                ${student.isGeneratingCaption ? `
+                                    <div class="flex items-center justify-center">
+                                        <div class="spinner -ml-1 mr-2"></div>
+                                        Captioning...
+                                    </div>
+                                ` : '✨ Generate Caption'}
+                            </button>
+                            <button
+                                id="generate-story-btn-${index}"
+                                class="flex-1 bg-orange-600 text-white py-2 px-5 rounded-xl text-lg font-semibold btn-fancy hover:bg-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-300 ${student.isGeneratingStory ? 'opacity-60 cursor-not-allowed' : ''}"
+                                data-index="${index}"
+                                ${student.isGeneratingStory ? 'disabled' : ''}
+                            >
+                                ${student.isGeneratingStory ? `
+                                    <div class="flex items-center justify-center">
+                                        <div class="spinner -ml-1 mr-2"></div>
+                                        Storytelling...
+                                    </div>
+                                ` : '✨ Generate Story'}
+                            </button>
+                        </div>
+                        <a
+                            href="${student.imageUrl}"
+                            download="dream-weaver-image-${index + 1}.png"
+                            class="inline-block mt-4 bg-green-600 text-white py-2 px-5 rounded-xl text-lg font-semibold btn-fancy hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 ml-2"
+                        >
+                            Download Image
+                        </a>
+                        ${student.imageCaption ? `
+                            <div class="mt-4 p-3 bg-white border border-gray-200 rounded-xl text-gray-700 text-sm shadow-inner ${fontFamily}">
+                                <strong class="block mb-1 text-gray-800">Image Caption:</strong>
+                                ${student.imageCaption}
+                            </div>
+                        ` : ''}
+                        ${student.storyStarter ? `
+                            <div class="mt-4 p-3 bg-white border border-gray-200 rounded-xl text-gray-700 text-sm shadow-inner ${fontFamily}">
+                                <strong class="block mb-1 text-gray-800">Story Starter:</strong>
+                                ${student.storyStarter}
+                            </div>
+                        ` : ''}
+                    </div>
+                ` : ''}
+            `;
+
+            // Re-attach event listeners after innerHTML update
+            document.getElementById(`prompt-${index}`).addEventListener('input', (e) => {
+                studentStates[index].prompt = e.target.value;
+            });
+            document.getElementById(`generate-btn-${index}`).addEventListener('click', () => generateImage(index));
+            document.getElementById(`enhance-prompt-btn-${index}`).addEventListener('click', () => enhancePrompt(index));
+            document.getElementById(`suggest-idea-btn-${index}`).addEventListener('click', () => suggestIdea(index));
+            document.getElementById(`suggest-style-btn-${index}`).addEventListener('click', () => suggestStyle(index));
+            document.getElementById(`analyze-prompt-btn-${index}`).addEventListener('click', () => analyzePrompt(index));
+            document.getElementById(`analyze-mood-btn-${index}`).addEventListener('click', () => analyzeMood(index));
+            // Only attach caption and story button listeners if image exists
+            if (student.imageUrl) {
+                document.getElementById(`generate-caption-btn-${index}`).addEventListener('click', () => generateImageCaption(index));
+                document.getElementById(`generate-story-btn-${index}`).addEventListener('click', () => generateStoryStarter(index));
+            }
+        }
+
+        // Function to handle search
+        function handleSearch() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const studentSections = document.querySelectorAll('#students-container > div');
+
+            studentSections.forEach((section, index) => {
+                const studentName = studentNames[index % studentNames.length].toLowerCase();
+                const promptText = studentStates[index].prompt.toLowerCase(); // Get current prompt from state
+
+                // Check if the search term is in the student name or the current prompt
+                if (studentName.includes(searchTerm) || promptText.includes(searchTerm) || searchTerm === '') {
+                    section.style.display = 'block'; // Show the section
+                } else {
+                    section.style.display = 'none'; // Hide the section
+                }
+            });
+        }
+
+        // Function to initialize all student sections
+        function initializeStudentSections() {
+            const container = document.getElementById('students-container');
+            for (let i = 0; i < 15; i++) {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.id = `student-section-${i}`;
+                // Apply a different background color, border color, width, shadow, padding, and border-radius
+                const sectionBg = sectionBackgrounds[i % sectionBackgrounds.length];
+                const sectionBorder = sectionBorderColors[i % sectionBorderColors.length];
+                const sectionBorderWidth = sectionBorderWidths[i % sectionBorderWidths.length];
+                const sectionShadow = sectionShadows[i % sectionShadows.length];
+                const sectionPadding = paddingClasses[i % paddingClasses.length];
+                const sectionBorderRadius = borderRadiusClasses[i % borderRadiusClasses.length];
+
+
+                sectionDiv.className = `${sectionPadding} ${sectionBorderRadius} w-full transform transition-transform duration-300 hover:scale-[1.01] ${sectionBg} ${sectionBorderWidth} ${sectionBorder} ${sectionShadow}`;
+                container.appendChild(sectionDiv);
+                renderStudentSection(i); // Initial render
+            }
+
+            // Attach event listener for the search button
+            document.getElementById('search-button').addEventListener('click', handleSearch);
+            // Add event listener for 'input' event on search input
+            document.getElementById('search-input').addEventListener('input', handleSearch);
+            // Optional: Add event listener for 'Enter' key in search input
+            document.getElementById('search-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleSearch();
+                }
+            });
+        }
+
+        // Function to handle image generation for a specific student
+        const generateImage = async (index) => {
+            // Update state for the specific student
+            studentStates[index].error = '';
+            studentStates[index].imageUrl = '';
+            studentStates[index].imageCaption = ''; // Clear previous caption
+            studentStates[index].storyStarter = ''; // Clear previous story starter
+            studentStates[index].moodAnalysis = ''; // Clear previous mood analysis
+            studentStates[index].isLoading = true;
+            renderStudentSection(index); // Re-render to show loading state
+
+            const prompt = studentStates[index].prompt.trim();
+
+            if (!prompt) {
+                studentStates[index].error = 'Please enter a prompt to generate an image.';
+                studentStates[index].isLoading = false;
+                renderStudentSection(index);
+                return;
+            }
+
+            try {
+                const payload = { instances: { prompt: prompt }, parameters: { "sampleCount": 1 } };
+                const apiKey = ""; // API key will be provided by the Canvas environment
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+                    const generatedImageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                    studentStates[index].imageUrl = generatedImageUrl;
+                } else {
+                    studentStates[index].error = 'Failed to generate image. Please try again.';
+                    console.error('Image generation failed:', result);
+                }
+            } catch (err) {
+                studentStates[index].error = 'An error occurred while generating the image. Please try again later.';
+                console.error('Fetch error:', err);
+            } finally {
+                studentStates[index].isLoading = false;
+                renderStudentSection(index); // Re-render to show result or final state
+            }
+        };
+
+        // Function to enhance prompt using Gemini API
+        const enhancePrompt = async (index) => {
+            studentStates[index].error = '';
+            studentStates[index].isEnhancing = true;
+            renderStudentSection(index);
+
+            const currentPrompt = studentStates[index].prompt.trim();
+            if (!currentPrompt) {
+                studentStates[index].error = 'Please enter some text to enhance the prompt.';
+                studentStates[index].isEnhancing = false;
+                renderStudentSection(index);
+                return;
+            }
+
+            try {
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: `Given the following brief image idea, expand it into a more detailed and evocative description suitable for an AI image generator. Focus on adding sensory details, atmosphere, and specific elements. The output should only be the expanded description, no conversational text. Original idea: '${currentPrompt}'` }] });
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // API key will be provided by the Canvas environment
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const enhancedText = result.candidates[0].content.parts[0].text;
+                    studentStates[index].prompt = enhancedText; // Update the prompt
+                } else {
+                    studentStates[index].error = 'Failed to enhance prompt. Please try again.';
+                    console.error('Prompt enhancement failed:', result);
+                }
+            } catch (err) {
+                studentStates[index].error = 'An error occurred while enhancing the prompt. Please try again later.';
+                console.error('Fetch error:', err);
+            } finally {
+                studentStates[index].isEnhancing = false;
+                renderStudentSection(index);
+            }
+        };
+
+        // Function to suggest a new idea using Gemini API
+        const suggestIdea = async (index) => {
+            studentStates[index].error = '';
+            studentStates[index].isSuggesting = true;
+            renderStudentSection(index);
+
+            try {
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: "Generate a single, highly creative, and descriptive image prompt for an AI image generator. The prompt should be unique and inspire a visually rich image. The output should only be the prompt, no conversational text." }] });
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // API key will be provided by the Canvas environment
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const suggestedText = result.candidates[0].content.parts[0].text;
+                    studentStates[index].prompt = suggestedText; // Update the prompt
+                } else {
+                    studentStates[index].error = 'Failed to suggest an idea. Please try again.';
+                    console.error('Idea suggestion failed:', result);
+                }
+            } catch (err) {
+                studentStates[index].error = 'An error occurred while suggesting an idea. Please try again later.';
+                console.error('Fetch error:', err);
+            } finally {
+                studentStates[index].isSuggesting = false;
+                renderStudentSection(index);
+            }
+        };
+
+        // Function to suggest artistic styles using Gemini API
+        const suggestStyle = async (index) => {
+            studentStates[index].error = '';
+            studentStates[index].isSuggestingStyle = true;
+            studentStates[index].suggestedStyles = ''; // Clear previous suggestions
+            renderStudentSection(index);
+
+            const currentPrompt = studentStates[index].prompt.trim();
+            if (!currentPrompt) {
+                studentStates[index].error = 'Please enter a prompt to get style suggestions.';
+                studentStates[index].isSuggestingStyle = false;
+                renderStudentSection(index);
+                return;
+            }
+
+            try {
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: `Given the following image prompt, suggest 3-5 distinct artistic styles that would complement it. Provide only the styles, comma-separated. Do not include any conversational text. Prompt: '${currentPrompt}'` }] });
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // API key will be provided by the Canvas environment
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const styles = result.candidates[0].content.parts[0].text;
+                    studentStates[index].suggestedStyles = styles; // Store suggested styles
+                } else {
+                    studentStates[index].error = 'Failed to suggest styles. Please try again.';
+                    console.error('Style suggestion failed:', result);
+                }
+            } catch (err) {
+                studentStates[index].error = 'An error occurred while suggesting styles. Please try again later.';
+                console.error('Fetch error:', err);
+            } finally {
+                studentStates[index].isSuggestingStyle = false;
+                renderStudentSection(index);
+            }
+        };
+
+        // Function to analyze prompt using Gemini API
+        const analyzePrompt = async (index) => {
+            studentStates[index].error = '';
+            studentStates[index].isAnalyzing = true;
+            studentStates[index].analysisResult = ''; // Clear previous analysis
+            renderStudentSection(index);
+
+            const currentPrompt = studentStates[index].prompt.trim();
+            if (!currentPrompt) {
+                studentStates[index].error = 'Please enter a prompt to analyze.';
+                studentStates[index].isAnalyzing = false;
+                renderStudentSection(index);
+                return;
+            }
+
+            try {
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: `Analyze the following image generation prompt for clarity, potential ambiguities, and suggest improvements to get a better image generation result. Provide a concise analysis and actionable suggestions. The output should only be the analysis, no conversational text. Prompt: '${currentPrompt}'` }] });
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // API key will be provided by the Canvas environment
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const analysis = result.candidates[0].content.parts[0].text;
+                    studentStates[index].analysisResult = analysis; // Store analysis result
+                } else {
+                    studentStates[index].error = 'Failed to analyze prompt. Please try again.';
+                    console.error('Prompt analysis failed:', result);
+                }
+            } catch (err) {
+                studentStates[index].error = 'An error occurred while analyzing the prompt. Please try again later.';
+                console.error('Fetch error:', err);
+            } finally {
+                studentStates[index].isAnalyzing = false;
+                renderStudentSection(index);
+            }
+        };
+
+        // Function to generate image caption using Gemini API
+        const generateImageCaption = async (index) => {
+            studentStates[index].error = '';
+            studentStates[index].isGeneratingCaption = true;
+            studentStates[index].imageCaption = ''; // Clear previous caption
+            renderStudentSection(index);
+
+            const imageUrl = studentStates[index].imageUrl;
+            if (!imageUrl) {
+                studentStates[index].error = 'No image generated to caption.';
+                studentStates[index].isGeneratingCaption = false;
+                renderStudentSection(index);
+                return;
+            }
+
+            try {
+                // Convert base64 image URL to base64 data
+                const base64ImageData = imageUrl.split(',')[1];
+
+                let chatHistory = [];
+                chatHistory.push({
+                    role: "user",
+                    parts: [
+                        { text: "Generate a creative and concise caption (1-2 sentences) for the following image. Focus on its visual elements and overall mood. The output should only be the caption, no conversational text." },
+                        {
+                            inlineData: {
+                                mimeType: "image/png", // Assuming PNG, adjust if other types are possible
+                                data: base64ImageData
+                            }
+                        }
+                    ]
+                });
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // API key will be provided by the Canvas environment
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const caption = result.candidates[0].content.parts[0].text;
+                    studentStates[index].imageCaption = caption; // Store generated caption
+                } else {
+                    studentStates[index].error = 'Failed to generate caption. Please try again.';
+                    console.error('Caption generation failed:', result);
+                }
+            } catch (err) {
+                studentStates[index].error = 'An error occurred while generating the caption. Please try again later.';
+                console.error('Fetch error:', err);
+            } finally {
+                studentStates[index].isGeneratingCaption = false;
+                renderStudentSection(index);
+            }
+        };
+
+        // Function to generate story starter using Gemini API
+        const generateStoryStarter = async (index) => {
+            studentStates[index].error = '';
+            studentStates[index].isGeneratingStory = true;
+            studentStates[index].storyStarter = ''; // Clear previous story starter
+            renderStudentSection(index);
+
+            const imageUrl = studentStates[index].imageUrl;
+            const currentPrompt = studentStates[index].prompt.trim();
+
+            if (!imageUrl && !currentPrompt) {
+                studentStates[index].error = 'Please generate an image or enter a prompt to get a story starter.';
+                studentStates[index].isGeneratingStory = false;
+                renderStudentSection(index);
+                return;
+            }
+
+            try {
+                let chatHistory = [];
+                if (imageUrl) {
+                    const base64ImageData = imageUrl.split(',')[1];
+                    chatHistory.push({
+                        role: "user",
+                        parts: [
+                            { text: "Generate a short, creative story starter (1-3 sentences) based on the visual elements and mood of this image. The output should only be the story starter, no conversational text." },
+                            {
+                                inlineData: {
+                                    mimeType: "image/png",
+                                    data: base64ImageData
+                                }
+                            }
+                        ]
+                    });
+                } else {
+                    chatHistory.push({ role: "user", parts: [{ text: `Generate a short, creative story starter (1-3 sentences) based on the following image idea: '${currentPrompt}'. The output should only be the story starter, no conversational text.` }] });
+                }
+
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // API key will be provided by the Canvas environment
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const story = result.candidates[0].content.parts[0].text;
+                    studentStates[index].storyStarter = story; // Store generated story starter
+                } else {
+                    studentStates[index].error = 'Failed to generate story starter. Please try again.';
+                    console.error('Story generation failed:', result);
+                }
+            } catch (err) {
+                studentStates[index].error = 'An error occurred while generating the story starter. Please try again later.';
+                console.error('Fetch error:', err);
+            } finally {
+                studentStates[index].isGeneratingStory = false;
+                renderStudentSection(index);
+            }
+        };
+
+        // Function to analyze mood using Gemini API
+        const analyzeMood = async (index) => {
+            studentStates[index].error = '';
+            studentStates[index].isAnalyzingMood = true;
+            studentStates[index].moodAnalysis = ''; // Clear previous mood analysis
+            renderStudentSection(index);
+
+            const imageUrl = studentStates[index].imageUrl;
+            const currentPrompt = studentStates[index].prompt.trim();
+
+            if (!imageUrl && !currentPrompt) {
+                studentStates[index].error = 'Please generate an image or enter a prompt to analyze its mood.';
+                studentStates[index].isAnalyzingMood = false;
+                renderStudentSection(index);
+                return;
+            }
+
+            try {
+                let chatHistory = [];
+                if (imageUrl) {
+                    const base64ImageData = imageUrl.split(',')[1];
+                    chatHistory.push({
+                        role: "user",
+                        parts: [
+                            { text: "Analyze the emotional tone or mood of this image. Describe the overall feeling it conveys in 1-2 sentences. The output should only be the mood analysis, no conversational text." },
+                            {
+                                inlineData: {
+                                    mimeType: "image/png",
+                                    data: base64ImageData
+                                }
+                            }
+                        ]
+                    });
+                } else {
+                    chatHistory.push({ role: "user", parts: [{ text: `Analyze the emotional tone or mood conveyed by the following image idea: '${currentPrompt}'. Describe the overall feeling it conveys in 1-2 sentences. The output should only be the mood analysis, no conversational text.` }] });
+                }
+
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // API key will be provided by the Canvas environment
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const mood = result.candidates[0].content.parts[0].text;
+                    studentStates[index].moodAnalysis = mood; // Store mood analysis result
+                } else {
+                    studentStates[index].error = 'Failed to analyze mood. Please try again.';
+                    console.error('Mood analysis failed:', result);
+                }
+            } catch (err) {
+                studentStates[index].error = 'An error occurred while analyzing the mood. Please try again later.';
+                console.error('Fetch error:', err);
+            } finally {
+                studentStates[index].isAnalyzingMood = false;
+                renderStudentSection(index);
+            }
+        };
+
+
+        // Initialize all sections when the DOM is fully loaded
+        window.onload = initializeStudentSections;
+    </script>
+</body>
+</html>
